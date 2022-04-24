@@ -1,4 +1,3 @@
-
 void jalan() {
 	
 	glColor3f(1.0,0.75,0.0);
