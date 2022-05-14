@@ -7,6 +7,8 @@
 #include "truk.h" // modul truk
 #include "mobil.h" // modul truk
 #include "jalan.h" // modul jalan
+#include "pohon.h" // modul phon
+
 
 #include <math.h>
 #include <iostream>
@@ -24,6 +26,9 @@ float x=0.0f,y=25.0f,z=50.0f;
 float lx=.0f,ly=0.0f,lz=30.0f;
 int h,w;
 
+// nyawa
+int nyawa = 5;
+
 
 float radius = 40.0, phi = 3.1415, theta = 0.0;
 // untuk kamera bergerak orbit pada truk
@@ -31,13 +36,22 @@ float eyeX = x + radius*cos(phi)*sin(theta);
 float eyeZ = z + radius*cos(theta);
 
 // posisi random
-float posisiXMobil = rand() % 30 - 15, posisiZMobil = -50.0;
+float posisiXMobil = rand() % 30 - 15, posisiZMobil = -700.0;
 float posisiXCone = rand() % 30 - 15, posisiZCone = -50.0;
 
 // posisi truk
-float posisiXTruk = 0.0;
+float posisiXTrukKekiri = 0.0; // sekaligus jarak btas
+float posisiXTrukKekanan = 0.0; // sekaligus jarak btas
 float deltaXTruk = 0.0;
 float perubahanXTruk = 0.0;
+float trukSpeed = 0.2;
+float posisiXTrukUntukCollision = 0;
+int lagiketabrak = 1;
+
+float batasTrukKanan = -20;
+float batasTrukKiri = 20;
+
+// posisi mobil
 
 // random warna mobil
 float r = rand() % 2, g = rand() % 2, b = rand() % 2;
@@ -64,13 +78,7 @@ void Reshape(int w1, int h1)
               eyeX, y, eyeZ, // posisi kamera
               lx, ly, lz, // target shoot
               0.0f, 1.0f, 0.0f); // up
-    
-    // UNTUK UJI COBA
-//    gluLookAt(
-//              0.0, 0.0, -10., // posisi kamera
-//              lx, ly, lz, // target shoot
-//              0.0f, 1.0f, 0.0f); // up
-    //
+
 }
 
 void orientMe(float ang)
@@ -89,8 +97,7 @@ void orientMe(float ang)
 
 void trukKekananKekiri(float xTruk)
 {
-     perubahanXTruk = xTruk + posisiXTruk;
-    
+        perubahanXTruk = xTruk;
 }
 
 // sumber cahaya
@@ -128,6 +135,39 @@ void glShadowProjection(float * l, float * e, float * n)
     glMultMatrixf(mat); // kalikan matrik
 }
 
+void renderBitmapString(float x,float y,float z,char *string) {
+  char *c;
+
+  glRasterPos3f(x, y,z);
+  for (c=string; *c != '\0'; c++) {
+    glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, *c);
+  }
+}
+
+void RenderScore() {
+    char s[100];
+    glPushMatrix();
+    sprintf(s,"Nyawa: %d", nyawa);
+    glColor3f(1,1,1);
+    renderBitmapString(5, 30, 0,s); //y axis inverted
+    glPopMatrix();
+}
+
+void setOrthographicProjection() {
+    // switch to projection mode
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    // set a 2D orthographic projection
+    gluOrtho2D(0, w, h, 0);
+    glMatrixMode(GL_MODELVIEW);
+}
+
+void restorePerspectiveProjection() {
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+}
 
 void Display()
 {
@@ -138,11 +178,34 @@ void Display()
         
     }
     
-    if(deltaXTruk)
+    if(deltaXTruk == -trukSpeed) // enabler ke kanan
     {
-        posisiXTruk += deltaXTruk;
-        trukKekananKekiri(posisiXTruk);
+        if(posisiXTrukKekanan >= batasTrukKanan) // mentok jalan kanan kanan
+        {
+            //collision nyawa
+            posisiXTrukUntukCollision += 0.2;
+            
+            // collision jalan
+            posisiXTrukKekanan += deltaXTruk;
+            posisiXTrukKekiri += deltaXTruk; // agar bisa bergerak ke kiri walaupun mentok kanan
+            trukKekananKekiri(posisiXTrukKekanan);
+        }
     }
+    else if (deltaXTruk == trukSpeed) // enabler ke kiri
+    {
+        if(posisiXTrukKekiri <= batasTrukKiri) // mentok jalan kanan kiri
+        {
+            //collision nyawa
+            posisiXTrukUntukCollision -= 0.2;
+            
+            // collision jalan
+            posisiXTrukKekanan += deltaXTruk ; // agar bisa bergerak ke kanan walaupun mentok kiri
+            posisiXTrukKekiri += deltaXTruk;
+            trukKekananKekiri(posisiXTrukKekiri);
+        }
+        
+    }
+        
     
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
@@ -173,7 +236,7 @@ void Display()
     truk();
     glPopMatrix();
 
-//    // gambar bayangan
+    // gambar bayangan
     glPushMatrix();
     glEnable(GL_LIGHTING);
     glColor3f(0.0,0.0,0.0);
@@ -186,9 +249,8 @@ void Display()
         glPopMatrix();
     //
     glPopMatrix();
-//
     
-//    //sekarang gambar bayangan yang muncul
+    //sekarang gambar bayangan yang muncul
     glPushMatrix();
     glShadowProjection(l,e,n);
     glDisable(GL_LIGHTING);
@@ -200,14 +262,28 @@ void Display()
         glTranslatef(0, 0, perubahanXTruk);
         trukBayangan();
         glPopMatrix();
-    //
     glPopMatrix();
-//    
     
     
-    //jalan raya bergerak
+    // ============ pohon
+    glPushMatrix();
+    glTranslatef(30, 0, -10);
+    pohon1();
+    glPopMatrix();
     
-    Jalan jalan11[3];
+    glPushMatrix();
+    glTranslatef(-50, 0, -30);
+    pohon2();
+    glPopMatrix();
+    
+    // ============ masjid
+    glPushMatrix();
+    glTranslatef(50, 0, -100);
+    glRotatef(-90, 0, 1, 0);
+    masjid();
+    glPopMatrix();
+    
+    // ============ jalan raya bergerak
     
     Jalan jalan2[3];
     Jalan jalan3[3];
@@ -220,10 +296,6 @@ void Display()
     Jalan jalan8[3];
     Jalan jalan9[3];
     Jalan jalan10[3];
-    
-    
-    // posisi atur ulang jalan
-    cout << posisiXJalan4 << "\n";
    
     
     
@@ -473,10 +545,10 @@ void Display()
     glPopMatrix();
     
     // posisi random mobil berkurang tiap iterasi, dan diatur ulang ketika > 150.0
-    if(posisiZMobil > 150.0 )
+    if(posisiZMobil > 150.0 ) // 150
     {
-        posisiZMobil = -500.0 ;
-        posisiXMobil = rand() % 30 - 15 ; // atur ulang posisi di sumbu x
+        posisiZMobil = -700.0 ;
+        posisiXMobil = rand() % 40 - 20 ; // atur ulang posisi di sumbu x
         // warna mobil juga diubah
         r = (rand() % 11) * 0.1;
         g = (rand() % 11) * 0.1;
@@ -497,6 +569,34 @@ void Display()
     glPopMatrix();
     
     
+    // collision antara truk dan mobil
+    // penjelasan
+    // lebar truk 5
+    // panjang truk perkiraan 20
+    // ketika mobil berada dalam area truk maka nyawa berkurang
+    
+//    cout << "\nposisiXTruk : " << posisiXTrukUntukCollision;
+//    cout << "\nposisiXMobil : " << posisiXMobil;
+    // (posisiZMobil >= 30 && posisiZMobil <= 50) &&
+    if ( (posisiZMobil >= 30 && posisiZMobil <= 50) && (posisiXMobil-4 <= posisiXTrukUntukCollision && posisiXMobil+4 >= posisiXTrukUntukCollision) && (lagiketabrak) )
+    {
+        // biar nyawa gak terus-terusan habis
+        lagiketabrak = 0;
+        nyawa--;
+    }
+    // agar tidak terus-terusan nyawa habis
+    if(posisiZMobil > 50)
+    {
+        lagiketabrak = 1;
+    }
+    
+    //nyawa dan score
+        setOrthographicProjection();
+        glPushMatrix();
+        glLoadIdentity();
+        RenderScore();
+        glPopMatrix();
+        restorePerspectiveProjection();
     
     // akhiran
     glutSwapBuffers();
@@ -510,10 +610,10 @@ void keyboardKontrolPress(unsigned char key, int x , int y)
     switch (key) {
             // karena truk dirotate sehingga yang berubah sebenarnya adalah sumbu z
         case 'a':
-            deltaXTruk = 0.1; // truk kekiri
+            deltaXTruk = trukSpeed; // truk kekiri // sebenarnya ke depan
             break;
         case 'd':
-            deltaXTruk = -0.1; // truk kekanan
+            deltaXTruk = -trukSpeed; // truk kekanan // sebenarnya ke belakang
             break;
         default:
             break;
