@@ -70,21 +70,21 @@ void Jalan::pinggiranJalan()
     glPushMatrix();
     glBegin(GL_QUADS);
     glColor3f(0.0,0.7,0.0);
-    glVertex3f(-200,-0.1,-100);
+    glVertex3f(-200,-0.1,-500);
     glVertex3f(-200,-0.1,-25.0);
     glVertex3f(1000,-0.1,-25.0);
-    glVertex3f(1000,-0.1,-100);
+    glVertex3f(1000,-0.1,-500);
     glEnd();
     glPopMatrix();
     
     
     //kiri
-    glColor3f(0.6,0.6,0.6);
+    glColor3f(0.0,0.7,0.0);
     glPushMatrix();
     glBegin(GL_QUADS);
     glVertex3f(-200,-0.1,25.0);
-    glVertex3f(-200,-0.1,100);
-    glVertex3f(1000,-0.1,100);
+    glVertex3f(-200,-0.1,500);
+    glVertex3f(1000,-0.1,500);
     glVertex3f(1000,-0.1,25.0);
     glEnd();
     glPopMatrix();

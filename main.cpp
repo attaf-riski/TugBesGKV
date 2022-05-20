@@ -28,6 +28,9 @@ int h,w;
 
 // nyawa
 int nyawa = 5;
+// skor
+int skor = 0;
+int jeda = 0;
 
 
 float radius = 40.0, phi = 3.1415, theta = 0.0;
@@ -35,32 +38,63 @@ float radius = 40.0, phi = 3.1415, theta = 0.0;
 float eyeX = x + radius*cos(phi)*sin(theta);
 float eyeZ = z + radius*cos(theta);
 
-// posisi random
-float posisiXMobil = rand() % 30 - 15, posisiZMobil = -700.0;
-float posisiXCone = rand() % 30 - 15, posisiZCone = -50.0;
-
 // posisi truk
 float posisiXTrukKekiri = 0.0; // sekaligus jarak btas
 float posisiXTrukKekanan = 0.0; // sekaligus jarak btas
 float deltaXTruk = 0.0;
 float perubahanXTruk = 0.0;
-float trukSpeed = 0.2;
+float trukSpeed = 0.3;
 float posisiXTrukUntukCollision = 0;
 int lagiketabrak = 1;
+int lagiketabrak2 = 1;
+int lagiketabrak3 = 1;
 
-float batasTrukKanan = -20;
-float batasTrukKiri = 20;
+//batas jalan yang tidak bisa dilewati truk
+float batasTrukKanan = -15;
+float batasTrukKiri = 15;
 
-// posisi mobil
+// mobil
+Halangan halangan1;
+Halangan halangan2;
+Halangan halangan3;
 
 // random warna mobil
 float r = rand() % 2, g = rand() % 2, b = rand() % 2;
+float r2 = rand() % 2, g2 = rand() % 2, b2 = rand() % 2;
+float r3 = rand() % 2, g3 = rand() % 2, b3 = rand() % 2;
+float carSpeed = 5.0;
 
 //posisi jalan
 float posisiXJalan1 = 0.0;
 float posisiXJalan2 = 0.0;
 float posisiXJalan3 = 0.0;
 float posisiXJalan4 = 0.0;
+float jalanSpeed = 7.5 ;
+
+
+//posisi pohon
+float posisiZpohon1 = -700;
+float posisiXpohon1 = rand() % 40 + 20;
+float posisiZpohon2 = -900;
+float posisiXpohon2 = rand() % 40 - 60;
+float posisiZpohon3 = -1000;
+float posisiXpohon3 = rand() % 40 - 60;
+float posisiZpohon4 = -900;
+float posisiXpohon4 = rand() % 60 + 20;
+float posisiZpohon5 = -900;
+float posisiXpohon5 = rand() % 80 + 20;
+float posisiZpohon6 = -1200;
+float posisiXpohon6 = rand() % 40 - 60;
+float posisiZpohon7 = -900;
+float posisiXpohon7 = rand() % 40 + 50;
+
+// posisi masjid
+float posisiZmasjid = -1600;
+float posisiXmasjid = rand() % 100 + 100;
+
+
+//status gameover
+int gameover = 0;
 
 void Reshape(int w1, int h1)
 {
@@ -135,6 +169,12 @@ void glShadowProjection(float * l, float * e, float * n)
     glMultMatrixf(mat); // kalikan matrik
 }
 
+void ulangGame()
+{
+    nyawa = 5;
+    skor = 0;
+}
+
 void renderBitmapString(float x,float y,float z,char *string) {
   char *c;
 
@@ -145,12 +185,38 @@ void renderBitmapString(float x,float y,float z,char *string) {
 }
 
 void RenderScore() {
+    // nyawa
     char s[100];
     glPushMatrix();
     sprintf(s,"Nyawa: %d", nyawa);
     glColor3f(1,1,1);
     renderBitmapString(5, 30, 0,s); //y axis inverted
     glPopMatrix();
+    
+    // skor
+    char s2[100];
+    glPushMatrix();
+    sprintf(s2,"Skor: %d", skor);
+    glColor3f(1,1,1);
+    renderBitmapString(150, 30, 0,s2); //y axis inverted
+    glPopMatrix();
+    
+    
+    //gameover
+    if(gameover){
+        char s3[100];
+        glPushMatrix();
+        sprintf(s3,"Game Over");
+        glColor3f(1,0,0);
+        renderBitmapString(1100/2, 900/2, 0,s3); //y axis inverted
+        glPopMatrix();
+        char s4[100];
+        glPushMatrix();
+        sprintf(s4,"Pencet 'spasi' untuk mengulang");
+        glColor3f(1,0,0);
+        renderBitmapString(900/2, (900/2)+30, 0,s4); //y axis inverted
+        glPopMatrix();
+    }
 }
 
 void setOrthographicProjection() {
@@ -171,6 +237,7 @@ void restorePerspectiveProjection() {
 
 void Display()
 {
+    
     if(deltaAngle)
     {
         angle += deltaAngle;
@@ -221,69 +288,148 @@ void Display()
     glutSolidSphere(10.0, 32, 32);
     glPopMatrix();
     
-    
-    
-   
-    
+
     // pergerakan truk kanan kiri
-    
-    
-    //truk tanpa roda
     glPushMatrix();
     glTranslatef(0, 0, 40);
-    glRotatef(-90, 0.0, 1.0, 0.0);
-    glTranslatef(0, 0, perubahanXTruk);
-    truk();
-    glPopMatrix();
-
-    // gambar bayangan
-    glPushMatrix();
-    glEnable(GL_LIGHTING);
-    glColor3f(0.0,0.0,0.0);
-    // truck
-        glPushMatrix();
-        glTranslatef(0, 0, 40);
-        glRotatef(-90, 0.0, 1.0, 0.0);
-        glTranslatef(0, 0, perubahanXTruk);
-        trukBayangan();
-        glPopMatrix();
-    //
-    glPopMatrix();
-    
-    //sekarang gambar bayangan yang muncul
-    glPushMatrix();
-    glShadowProjection(l,e,n);
-    glDisable(GL_LIGHTING);
-    glColor3f(0.0,0.0,0.0);
-    // truck
-        glPushMatrix();
-        glTranslatef(0, 0, 40);
-        glRotatef(-90, 0.0, 1.0, 0.0);
-        glTranslatef(0, 0, perubahanXTruk);
-        trukBayangan();
-        glPopMatrix();
+    glRotatef(-180, 0.0, 1.0, 0.0);
+    glScalef(1.5, 1.5, 1.5);
+    glTranslatef(perubahanXTruk, 0, 0);
+    trukGandeng();
     glPopMatrix();
     
     
-    // ============ pohon
+    if (posisiZpohon1 > 150)
+    {
+        posisiZpohon1 = -700;
+        posisiXpohon1 = rand() % 40 + 30;
+    }
+    else{
+        posisiZpohon1 += jalanSpeed;
+        
+    }
+    
+    // pohon
     glPushMatrix();
-    glTranslatef(30, 0, -10);
+    glTranslatef(posisiXpohon1, 0, posisiZpohon1);
+    glScalef(2, 3, 2);
     pohon1();
     glPopMatrix();
     
+    
+    if (posisiZpohon2 > 300)
+    {
+        posisiZpohon2 = -700;
+        posisiXpohon2 = rand() % 20 - 80;
+    }
+    else{
+        posisiZpohon2 += jalanSpeed; 
+        
+    }
     glPushMatrix();
-    glTranslatef(-50, 0, -30);
+    glTranslatef(posisiXpohon2, 0, posisiZpohon2);
+    glScalef(2, 3, 2);
     pohon2();
     glPopMatrix();
     
-    // ============ masjid
+    if (posisiZpohon3 > 300)
+    {
+        posisiZpohon3 = -900;
+        posisiXpohon3 = rand() % 20 - 100;
+    }
+    else{
+        posisiZpohon3 += jalanSpeed;
+        
+    }
     glPushMatrix();
-    glTranslatef(50, 0, -100);
+    glTranslatef(posisiXpohon3, 0, posisiZpohon3);
+    glScalef(2, 3, 2);
+    pohon3();
+    glPopMatrix();
+    
+    if (posisiZpohon4 > 300)
+    {
+        posisiZpohon4 = -1000;
+        posisiXpohon4 = rand() % 60 + 30;
+    }
+    else{
+        posisiZpohon4 += jalanSpeed;
+        
+    }
+    glPushMatrix();
+    glTranslatef(posisiXpohon4, 0, posisiZpohon4);
+    glScalef(2, 3, 2);
+    pohon2();
+    glPopMatrix();
+    
+    
+    if (posisiZpohon5 > 300)
+    {
+        posisiZpohon5 = -1200;
+        posisiXpohon5 = rand() % 80 + 30;
+    }
+    else{
+        posisiZpohon5 += jalanSpeed;
+        
+    }
+    glPushMatrix();
+    glTranslatef(posisiXpohon5, 0, posisiZpohon5);
+    glScalef(2, 3, 2);
+    pohon3();
+    glPopMatrix();
+    
+    
+    if (posisiZpohon6 > 300)
+    {
+        posisiZpohon6 = -1200;
+        posisiXpohon6  = rand() % 20 - 70;
+    }
+    else{
+        posisiZpohon6 += jalanSpeed;
+        
+    }
+    glPushMatrix();
+    glTranslatef(posisiXpohon6, 0, posisiZpohon6);
+    glScalef(2, 3, 2);
+    pohon1();
+    glPopMatrix();
+    
+    
+    if (posisiZpohon7 > 300)
+    {
+        posisiZpohon7 = -1400;
+        posisiXpohon7 = rand() % 80 + 30;
+    }
+    else{
+        posisiZpohon7 += jalanSpeed;
+        
+    }
+    glPushMatrix();
+    glTranslatef(posisiXpohon7, 0, posisiZpohon7);
+    glScalef(2, 3, 2);
+    pohon2();
+    glPopMatrix();
+    
+    
+    // masjid
+    if (posisiZmasjid > 500)
+    {
+        posisiZmasjid = -1600;
+        posisiZmasjid = rand() % 100 + 100;
+    }
+    else{
+        posisiZmasjid += jalanSpeed;
+        
+    }
+    glPushMatrix();
+    glTranslatef(posisiXmasjid, 0, posisiZmasjid);
     glRotatef(-90, 0, 1, 0);
+    glScalef(2, 2, 2);
     masjid();
     glPopMatrix();
     
-    // ============ jalan raya bergerak
+    
+    // jalan raya bergerak
     
     Jalan jalan2[3];
     Jalan jalan3[3];
@@ -306,7 +452,7 @@ void Display()
     else
     {
         
-        posisiXJalan1 += 3.5;
+        posisiXJalan1 += jalanSpeed;
     }
     
     if(posisiXJalan2 > 300.0 )
@@ -315,7 +461,7 @@ void Display()
     }
     else
     {
-        posisiXJalan2 += 3.5;
+        posisiXJalan2 += jalanSpeed;
     }
     
     if(posisiXJalan3 > 300.0 )
@@ -324,7 +470,7 @@ void Display()
     }
     else
     {
-        posisiXJalan3 += 3.5;
+        posisiXJalan3 += jalanSpeed;
     }
     
     //dasar
@@ -544,51 +690,111 @@ void Display()
     jalan2[0].pinggiranJalan();
     glPopMatrix();
     
-    // posisi random mobil berkurang tiap iterasi, dan diatur ulang ketika > 150.0
-    if(posisiZMobil > 150.0 ) // 150
+    // Halangan
+    // bagian Attaf
+    
+    // mobil ke-1
+        // posisi random mobil berkurang tiap iterasi, dan diatur ulang ketika > 150.0
+        if(halangan1.posisiZMobil > 150.0 ) // 150
+        {
+            halangan1.posisiZMobil = -700.0 ;
+            halangan1.posisiXMobil = rand() % 40 - 20 ; // atur ulang posisi di sumbu x
+            // warna mobil juga diubah
+            r = (rand() % 11) * 0.1;
+            g = (rand() % 11) * 0.1;
+            b = (rand() % 11) * 0.1; // agar hasilnya 0.0 -- 1.0
+        }
+        else
+        {
+            halangan1.posisiZMobil += carSpeed;
+        }
+        
+        // mobil bergerak dan posisi random
+        glPushMatrix();
+        // cukup bergerak di sumbu x dan z
+        glTranslatef(halangan1.posisiXMobil, 1.7, halangan1.posisiZMobil);
+        glScalef(0.15, 0.15, 0.15);
+        glRotatef(90, 0.0, 1.0, 0.0);
+        halangan1.Mobil(r,g,b);
+        glPopMatrix();
+        
+        // collision antara truk dan mobil
+        // penjelasan
+        // lebar truk 5
+        // panjang truk perkiraan 20
+        // ketika mobil berada dalam area truk maka nyawa berkurang
+        
+        if ( (halangan1.posisiZMobil >= 30 && halangan1.posisiZMobil <= 50) && (halangan1.posisiXMobil-5 <= posisiXTrukUntukCollision && halangan1.posisiXMobil+2 >= posisiXTrukUntukCollision) && (lagiketabrak) )
+        {
+            // biar nyawa gak terus-terusan habis
+            lagiketabrak = 0;
+            if(!gameover){
+                nyawa--;
+            }
+        }
+        // agar tidak terus-terusan nyawa habis
+        if(halangan1.posisiZMobil > 50)
+        {
+            lagiketabrak = 1;
+        }
+
+    
+    // mobil ke-2
+    if(halangan2.posisiZMobil > 150.0 ) // 150
     {
-        posisiZMobil = -700.0 ;
-        posisiXMobil = rand() % 40 - 20 ; // atur ulang posisi di sumbu x
+        halangan2.posisiZMobil = -1000.0 ;
+        halangan2.posisiXMobil = rand() % 40 - 20 ; // atur ulang posisi di sumbu x
         // warna mobil juga diubah
-        r = (rand() % 11) * 0.1;
-        g = (rand() % 11) * 0.1;
-        b = (rand() % 11) * 0.1; // agar hasilnya 0.0 -- 1.0
+        r2 = (rand() % 11) * 0.1;
+        g2 = (rand() % 11) * 0.1;
+        b2 = (rand() % 11) * 0.1; // agar hasilnya 0.0 -- 1.0
     }
     else
     {
-        posisiZMobil += 2.0;
+        halangan2.posisiZMobil += carSpeed;
     }
     
     // mobil bergerak dan posisi random
     glPushMatrix();
-    // cukup bergerak di sumbu x dan z
-    glTranslatef(posisiXMobil, 1.7, posisiZMobil);
-    glScalef(0.15, 0.15, 0.15);
-    glRotatef(90, 0.0, 1.0, 0.0);
-    Mobil(r,g,b);
+        // cukup bergerak di sumbu x dan z
+        glTranslatef(halangan2.posisiXMobil, 1.7, halangan2.posisiZMobil);
+        glScalef(0.15, 0.15, 0.15);
+        glRotatef(90, 0.0, 1.0, 0.0);
+        halangan1.Mobil(r2,g2,b2);
     glPopMatrix();
     
     
-    // collision antara truk dan mobil
-    // penjelasan
-    // lebar truk 5
-    // panjang truk perkiraan 20
-    // ketika mobil berada dalam area truk maka nyawa berkurang
-    
-//    cout << "\nposisiXTruk : " << posisiXTrukUntukCollision;
-//    cout << "\nposisiXMobil : " << posisiXMobil;
-    // (posisiZMobil >= 30 && posisiZMobil <= 50) &&
-    if ( (posisiZMobil >= 30 && posisiZMobil <= 50) && (posisiXMobil-4 <= posisiXTrukUntukCollision && posisiXMobil+4 >= posisiXTrukUntukCollision) && (lagiketabrak) )
+    if ( (halangan2.posisiZMobil >= 0 && halangan2.posisiZMobil <= 60) && (halangan2.posisiXMobil-5 <= posisiXTrukUntukCollision && halangan2.posisiXMobil+8 >= posisiXTrukUntukCollision) && (lagiketabrak2) )
     {
         // biar nyawa gak terus-terusan habis
-        lagiketabrak = 0;
-        nyawa--;
+        lagiketabrak2 = 0;
+        if(!gameover){
+            nyawa--;
+        }
     }
     // agar tidak terus-terusan nyawa habis
-    if(posisiZMobil > 50)
+    if(halangan2.posisiZMobil > 100)
     {
-        lagiketabrak = 1;
+        lagiketabrak2 = 1;
     }
+    
+    
+    
+    // scoring
+    if(jeda < 100)
+    {
+        jeda++;
+    }
+    else
+    {
+        jeda = 0;
+        if(!gameover){
+            skor++;
+        }
+        
+    }
+    
+    
     
     //nyawa dan score
         setOrthographicProjection();
@@ -597,6 +803,10 @@ void Display()
         RenderScore();
         glPopMatrix();
         restorePerspectiveProjection();
+    
+    if (nyawa <= 0){
+        gameover = 1;
+    }
     
     // akhiran
     glutSwapBuffers();
@@ -615,6 +825,13 @@ void keyboardKontrolPress(unsigned char key, int x , int y)
         case 'd':
             deltaXTruk = -trukSpeed; // truk kekanan // sebenarnya ke belakang
             break;
+        case 32:
+            if(gameover){
+                skor = 0;
+                nyawa = 5;
+                gameover = 0;
+            }
+            break;
         default:
             break;
     }
@@ -630,6 +847,7 @@ void keyboardKontrolRelease(unsigned char key, int x , int y)
         case 'd':
             deltaXTruk = 0.0; // truk kekanan
             break;
+        
         default:
             break;
     }
@@ -704,6 +922,11 @@ void init(void)
 {
     glEnable(GL_DEPTH_TEST);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    
+    // mobil
+    halangan1.posisiXMobil = rand() % 30 - 15, halangan1.posisiZMobil = -700.0;
+    halangan2.posisiXMobil = rand() % 30 - 15, halangan2.posisiZMobil = -1000.0;
+    halangan3.posisiXMobil = rand() % 30 - 15, halangan3.posisiZMobil = -700.0;
 }
 
 int main(int argc,char **argv)
@@ -713,7 +936,7 @@ int main(int argc,char **argv)
     glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowPosition(100, 100);
     glutInitWindowSize(1280, 960);
-    glutCreateWindow("Electric double container truck");
+    glutCreateWindow("Truk Rem Blong");
     glutIgnoreKeyRepeat(1);
     glutKeyboardFunc(keyboardKontrolPress);
     glutKeyboardUpFunc(keyboardKontrolRelease);
@@ -728,6 +951,7 @@ int main(int argc,char **argv)
     
     
     lighting();
+    // setup awal
     init();
     
     // Reset koordinat sebelum dimodifikasi/diubah

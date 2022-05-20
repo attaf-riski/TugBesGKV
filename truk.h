@@ -12,10 +12,6 @@ void pembuatSegiEmpat(
                       float x2,float y2, float z2,
                       float x3,float y3, float z3,
                       float x4,float y4, float z4 );
-void boxTrukPertama();
-void boxTrukKedua();
-void kepalaTruk();
-void truk();
-void trukBayangan();
+void trukGandeng();
 
 #endif /* truk_h */

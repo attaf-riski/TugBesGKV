@@ -1,9 +1,14 @@
-#include <GLUT/glut.h>
 #include <math.h>
 #include "mobil.h"
+#ifdef __APPLE__ // untuk program yang dijalankan di MacOS
+#include <GLUT/glut.h>
+#include <OpenGL/gl.h>
+#else // untuk program yang dijalankan di Windows
+#include <GL/glut.h>
+#endif
 
 
-void Cone()
+void Halangan::Cone()
 {
     // sisi satu
     sisiCone();
@@ -43,7 +48,7 @@ void Cone()
     glPopMatrix();
 }
 
-void sisiCone()
+void Halangan::sisiCone()
 {
     // sisi satu
 
@@ -81,7 +86,7 @@ void sisiCone()
     
 }
 
-void Mobil(float r, float g, float b)
+void Halangan::Mobil(float r, float g, float b)
 {
     glPushMatrix();
     
@@ -175,7 +180,7 @@ void Mobil(float r, float g, float b)
 
 }
 
-void kerucut(float ngisor, float nduwur, float dowo)
+void Halangan::kerucut(float ngisor, float nduwur, float dowo)
 {
     float i;
     glPushMatrix();
@@ -193,7 +198,7 @@ void kerucut(float ngisor, float nduwur, float dowo)
 }
 
 
-void cylinder(float alas, float atas, float tinggi)
+void Halangan::cylinder(float alas, float atas, float tinggi)
 {
     float i;
     glPushMatrix();
@@ -210,7 +215,7 @@ void cylinder(float alas, float atas, float tinggi)
     glPopMatrix();
 }
 
-void blok(float tebal, int ratiol, int ratiop)
+void Halangan::blok(float tebal, int ratiol, int ratiop)
 {
     float i, j;
     glPushMatrix();
