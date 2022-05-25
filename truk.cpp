@@ -606,12 +606,26 @@ void trukGandeng()
 			glTranslatef(0.0,2.15,0.5);
 			glScalef(2.5, 2.0, 5.8);
 			glColor3f(0.75,0.5,0);
-			glEnable(GL_TEXTURE_GEN_S); //enable texture coordinate generation
-    		glEnable(GL_TEXTURE_GEN_T);
 			glutSolidCube(1.0);
-			glDisable(GL_TEXTURE_GEN_S);
-			glDisable(GL_TEXTURE_GEN_T);
 		glPopMatrix();
+	//tekstur
+	glBegin(GL_QUADS);
+//Sisi belakang
+		glNormal3f(0.0, 1.0f, 1.0f);
+		glTexCoord2f(0.0f, 0.0f);
+		glVertex3f(1.39, 1.25, -10.265);
+		glTexCoord2f(1.0f, 0.0f);
+		glVertex3f(-1.39, 1.25, -10.265);
+		glTexCoord2f(1.0f, 1.0f);
+		glVertex3f(-1.39, 3.75, -10.265);
+		glTexCoord2f(0.0f, 1.0f);
+		glVertex3f(1.39, 3.75, -10.265);
+	glEnd();
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, _textureId);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glColor3f(1.0f, 1.0f, 1.0f);
 	glPopMatrix();
 }
 
